@@ -47,6 +47,24 @@ module controlUnit(
                 ALUSrc = 1'b1;   
                 ALUOp = 3'b010;
             end
+            
+            6'b001111: begin // LUI 
+                ALUSrc = 1'b1; 
+                RegWrite = 1'b1; 
+                ALUOp = 3'b000; // ALU operation for LUI
+            end
+
+            6'b001101: begin // ORI 
+                ALUSrc = 1'b1; 
+                RegWrite = 1'b1; 
+                ALUOp = 3'b001; // ALU operation for ORI
+            end
+
+            6'b001001: begin // ADDIU 
+                ALUSrc = 1'b1; 
+                RegWrite = 1'b1; 
+                ALUOp = 3'b010; // ALU operation for ADDIU
+            end
 
             default: begin // Default case for unsupported opcodes
                 MemtoReg = 1'b0;

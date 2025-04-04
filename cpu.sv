@@ -11,7 +11,8 @@ module cpu(
 );
 
 logic [31:0] imm_extend;
-logic [31:0] rd1;
+
+logic [31:0] aluRes;
 
 
 // pc
@@ -25,21 +26,23 @@ PC prgramCounter(
 logic [5:0] opcode;
 logic [4:0] rs;
 logic [4:0] rt;
+logic [4:0] rd;
 logic [15:0] imm;
 logic [5:0] funct;
 assign opcode = instr[31:26]; 
 assign rs = instr[25:21]; 
 assign rt = instr[20:16]; 
+assign rd = instr[15:11];
 assign imm = instr[15:0]; 
 assign funct = instr[5:0];
 
 
-logic MemtoReg;    
+logic MemtoReg;     // √
 logic Branch;      
-logic [2:0] ALUOp;
-logic ALUSrc;      
-logic RegDst;      
-logic RegWrite;     
+logic [2:0] ALUOp;  // √
+logic ALUSrc;       // √
+logic RegDst;       // √
+logic RegWrite;     // √
 
 controlUnit controlUnit (
     .opcode(opcode), 
@@ -54,20 +57,25 @@ controlUnit controlUnit (
     .RegWrite(RegWrite)   
 );
 
-// register file
+logic [31:0] rd1;
+logic [31:0] rd2;
+logic [4:0] wa3;
+assign wa3 = RegDst ? rd : rt; 
+logic [31:0] wd3;
+assign wd3 = MemtoReg ? dout : aluRes;
 RegFile regFile (
     .sys_clk(sys_clk),
     .sys_rst_n(sys_rst_n),
-    .ra1(rs),     // rs
-    .ra2(rt),     // rt
-    .wa3(rt),     // rt
-    .we3(RegWrite),         // write enable
-    .wd3(dout),
+    .ra1(rs),                   // rs
+    .ra2(rt),                   // rt
+    .wa3(wa3),                  // rt or rd
+    .we3(RegWrite),            
+    .wd3(wd3),                  // aluRes or dout
 
     .rd1(rd1),
-    .rd2(din)
+    .rd2(rd2)
 );
-
+assign din = rd2; 
 
 // imm sign extend
 signExtend signExtend (
@@ -76,13 +84,16 @@ signExtend signExtend (
 );
 
 // alu
+logic [31:0] SrcB;
+assign SrcB = ALUSrc ? imm_extend : rd2;
 alu alu (
     .SrcA(rd1),
-    .SrcB(imm_extend),
-    .aluop(ALUOp), // ADD
-    .alures(daddr)
-);
+    .SrcB(SrcB),                // rd2 or imm_extend
+    .aluop(ALUOp),
 
+    .alures(aluRes)
+);
+assign daddr = aluRes;
 
 
 endmodule

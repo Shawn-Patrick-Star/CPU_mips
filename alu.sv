@@ -7,11 +7,15 @@ module alu (
     output logic [31:0]     alures
     );
 
-	localparam	ADD   =	3'b010;
+	localparam ADD = 3'b010;
+    localparam ORI = 3'b001;
+    localparam LUI = 3'b000;
 
     always_comb begin
         case (aluop)
             ADD: alures = SrcA + SrcB;
+            ORI: alures = SrcA | SrcB;
+            LUI: alures = SrcB << 16; // Shift left immediate value
             default: alures = 32'h00000000;
         endcase
         

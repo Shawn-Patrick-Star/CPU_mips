@@ -1,15 +1,16 @@
 module controlUnit(
-    input logic [5:0] opcode, // Opcode from instruction
-    input logic [5:0] funct,  // Function code from instruction
+    input logic [5:0] opcode,   // Opcode from instruction
+    input logic [5:0] funct,    // Function code from instruction
+    input logic zero,           // Zero flag from ALU
 
-    output logic MemtoReg,    // 回写的数据来自于 ALU计算结果(0) or 存储器读取结果(1)
-    output logic MemWrite,    // 是否需要写 data memory
-    output logic Branch,      // 是否需要分支跳转
+    output logic MemtoReg,      // 回写的数据来自于 ALU计算结果(0) or 存储器读取结果(1)
+    output logic MemWrite,      // 是否需要写 data memory
     output logic [2:0] ALUOp, 
-    output logic ALUSrc,      // ALUSrcB来自于立即数32位扩展(1) or 寄存器(0)
-    output logic RegDst,      // 寄存器写入地址来自于 rt(0) or rd(1)
-    output logic RegWrite,    // 是否需要写 RegFiles
-    output logic Jump         // 是否需要跳转
+    output logic ALUSrc,        // ALUSrcB来自于立即数32位扩展(1) or 寄存器(0)
+    output logic RegDst,        // 寄存器写入地址来自于 rt(0) or rd(1)
+    output logic RegWrite,      // 是否需要写 RegFiles
+    output logic Jump,          // 是否需要跳转
+    output logic pcSrc          // pcSrc来自于分支跳转(1) or pc+4(0)
     );
 
     // Control unit logic
@@ -17,12 +18,12 @@ module controlUnit(
         // Default values
         MemtoReg = 1'b0;
         MemWrite = 1'b0;
-        Branch = 1'b0;
         ALUOp = 3'b000; 
         ALUSrc = 1'b0;
         RegDst = 1'b0;
         RegWrite = 1'b0;
         Jump = 1'b0;
+        pcSrc = 1'b0;
 
         case (opcode)
             6'b100011: begin // LW 
@@ -58,11 +59,16 @@ module controlUnit(
             end
 
             6'b000100: begin // BEQ 
-                Branch = 1'b1; 
+                pcSrc = zero;
+                ALUOp = 3'b110; 
+                
+            end
+
+            6'b000101: begin // BNE 
+                pcSrc = ~zero;
                 ALUOp = 3'b110; 
             end
 
-            // j
             6'b000010: begin // JUMP 
                 Jump = 1'b1; 
             end
@@ -86,12 +92,12 @@ module controlUnit(
             default: begin // Default case for unsupported opcodes
                 MemtoReg = 1'b0;
                 MemWrite = 1'b0;
-                Branch = 1'b0;
                 ALUOp = 3'b000;
                 ALUSrc = 1'b0;
                 RegDst = 1'b0;
                 RegWrite = 1'b0;
                 Jump = 1'b0;
+                pcSrc = 1'b0;
             end
         endcase
 

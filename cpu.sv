@@ -12,8 +12,7 @@ module cpu(
 
 
 // control signals
-logic           MemtoReg;    
-logic           Branch;      
+logic           MemtoReg;         
 logic [2:0]     ALUOp; 
 logic           ALUSrc;      
 logic           RegDst;      
@@ -58,7 +57,6 @@ logic [31:0]    pc_plus4;
 
 /* ----------------------------------------------- */
 
-assign pcSrc = Branch & zero; // 1'b0 or 1'b1
 assign pc_plus4 = pc + 4; // pc+4
 assign next_pc = Jump ? {pc_plus4[31:28], target, 2'b00} : 
                  pcSrc ? (pc_plus4 + (imm_extend << 2)) : pc_plus4;
@@ -72,15 +70,16 @@ PC prgramCounter(
 controlUnit controlUnit (
     .opcode(opcode), 
     .funct(funct),
+    .zero(zero),
 
     .MemtoReg(MemtoReg),    
-    .MemWrite(MemWrite),   
-    .Branch(Branch),    
+    .MemWrite(MemWrite),       
     .ALUOp(ALUOp), 
     .ALUSrc(ALUSrc),     
     .RegDst(RegDst),     
     .RegWrite(RegWrite),
-    .Jump(Jump)
+    .Jump(Jump),
+    .pcSrc(pcSrc)
 );
 
 

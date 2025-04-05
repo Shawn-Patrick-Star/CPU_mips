@@ -9,7 +9,7 @@ module alu (
     );
 
 	localparam ADD = 3'b010;
-    localparam SUB = 3'b011;
+    localparam SUB = 3'b110;
     localparam ORI = 3'b001;
     localparam LUI = 3'b000;
     localparam SLT = 3'b111;

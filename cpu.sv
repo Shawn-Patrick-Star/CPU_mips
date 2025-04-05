@@ -12,52 +12,56 @@ module cpu(
 
 
 // control signals
-logic MemtoReg;     // √
-logic Branch;       // √
-logic [2:0] ALUOp;  // √
-logic ALUSrc;       // √
-logic RegDst;       // √
-logic RegWrite;     // √
+logic           MemtoReg;    
+logic           Branch;      
+logic [2:0]     ALUOp; 
+logic           ALUSrc;      
+logic           RegDst;      
+logic           RegWrite;    
+logic           Jump;        
+
+// instruction signals
+logic [5:0]     opcode;
+logic [4:0]     rs;
+logic [4:0]     rt;
+logic [4:0]     rd;
+logic [15:0]    imm;
+logic [5:0]     funct;
+logic [26:0]    target;
+assign opcode =     instr[31:26]; 
+assign rs =         instr[25:21]; 
+assign rt =         instr[20:16]; 
+assign rd =         instr[15:11];
+assign imm =        instr[15:0]; 
+assign funct =      instr[5:0];
+assign target =     instr[25:0]; // 26 bits
+
 
 // regfile signals
-logic [5:0] opcode;
-logic [4:0] rs;
-logic [4:0] rt;
-logic [4:0] rd;
-logic [15:0] imm;
-logic [5:0] funct;
-assign opcode = instr[31:26]; 
-assign rs = instr[25:21]; 
-assign rt = instr[20:16]; 
-assign rd = instr[15:11];
-assign imm = instr[15:0]; 
-assign funct = instr[5:0];
-
-// regfile signals
-logic [31:0] rd1;
-logic [31:0] rd2;
-logic [4:0] wa3;
-logic [31:0] wd3;
+logic [31:0]    rd1;
+logic [31:0]    rd2;
+logic [4:0]     wa3;
+logic [31:0]    wd3;
 
 
 // alu signals
-logic [31:0] imm_extend;
-logic [31:0] SrcB;
-logic [31:0] aluRes;
+logic [31:0]    imm_extend;
+logic [31:0]    SrcB;
+logic [31:0]    aluRes;
 logic zero;
 
 // pc signals
-logic pcSrc;
-logic [31:0] pc;
-logic [31:0] next_pc;
-logic [31:0] pc_plus4;
+logic           pcSrc;
+logic [31:0]    pc;
+logic [31:0]    next_pc;
+logic [31:0]    pc_plus4;
 
-
+/* ----------------------------------------------- */
 
 assign pcSrc = Branch & zero; // 1'b0 or 1'b1
-assign iaddr = pc; 
 assign pc_plus4 = pc + 4; // pc+4
-assign next_pc = pcSrc ? (pc_plus4 + (imm_extend << 2)) : pc_plus4;
+assign next_pc = Jump ? {pc_plus4[31:28], target, 2'b00} : 
+                 pcSrc ? (pc_plus4 + (imm_extend << 2)) : pc_plus4;
 PC prgramCounter(
     .sys_clk(sys_clk),
     .sys_rst_n(sys_rst_n),
@@ -75,11 +79,12 @@ controlUnit controlUnit (
     .ALUOp(ALUOp), 
     .ALUSrc(ALUSrc),     
     .RegDst(RegDst),     
-    .RegWrite(RegWrite)   
+    .RegWrite(RegWrite),
+    .Jump(Jump)
 );
 
 
-assign din = rd2; 
+
 assign wa3 = RegDst ? rd : rt; 
 assign wd3 = MemtoReg ? dout : aluRes;
 RegFile regFile (
@@ -104,7 +109,6 @@ signExtend signExtend (
 
 // alu
 assign SrcB = ALUSrc ? imm_extend : rd2;
-assign daddr = aluRes;
 alu alu (
     .SrcA(rd1),
     .SrcB(SrcB),                // rd2 or imm_extend
@@ -114,6 +118,9 @@ alu alu (
     .zero(zero)
 );
 
-
+// cpu output
+assign iaddr = pc; 
+assign daddr = aluRes;
+assign din = rd2; 
 
 endmodule

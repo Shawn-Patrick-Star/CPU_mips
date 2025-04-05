@@ -22,6 +22,7 @@ module controlUnit(
         ALUSrc = 1'b0;
         RegDst = 1'b0;
         RegWrite = 1'b0;
+        Jump = 1'b0;
 
         case (opcode)
             6'b100011: begin // LW 
@@ -90,6 +91,7 @@ module controlUnit(
                 ALUSrc = 1'b0;
                 RegDst = 1'b0;
                 RegWrite = 1'b0;
+                Jump = 1'b0;
             end
         endcase
 

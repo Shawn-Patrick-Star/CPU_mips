@@ -60,3 +60,10 @@ case (opcode)
 注意看reg中的变化，和汇编代码中的变化一致
 
 ![wave_lui](./pic/image_3.png)
+
+### 3. R-type 指令(slt, beq, addu(是I-type但是新实现的), j)
+
+注意看reg中的变化，来判断 slt 和 addu 是否正确
+注意看instr的变化，来判断 beq 和 j 是否正确
+
+![wave_slt](./pic/image_4.png)

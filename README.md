@@ -2,6 +2,7 @@
 1. 每次在vscode中创建sv文件后，要在vivado中添加文件
 2. ip核修改coe文件后，有可能不生效，建议删除ip核重新添加
 3. 注意小端和大端存储的区别（本项目使用小端存储，所以 inst_rom 和 data_ram 中**读出**和**写入**的数据要先转换，即little endian存储，big endian取出）
+4. inst_rom, data_ram 使用的IP核是 distributed memory 
 
 ## 辅助知识
 
@@ -54,3 +55,8 @@ case (opcode)
        endcase
    end
 ```
+
+### 2. I-type 指令(lui, ori, addiu)
+注意看reg中的变化，和汇编代码中的变化一致
+
+![wave_lui](./pic/image_3.png)

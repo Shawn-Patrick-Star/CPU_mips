@@ -10,19 +10,16 @@ module cpu(
     output logic [31:0] din         // 数据 to data_ram
 );
 
-logic [31:0] imm_extend;
 
-logic [31:0] aluRes;
+// control signals
+logic MemtoReg;     // √
+logic Branch;       // √
+logic [2:0] ALUOp;  // √
+logic ALUSrc;       // √
+logic RegDst;       // √
+logic RegWrite;     // √
 
-
-// pc
-PC prgramCounter(
-    .sys_clk(sys_clk),
-    .sys_rst_n(sys_rst_n),
-    .next_pc(),
-    .pc(iaddr)
-);
-
+// regfile signals
 logic [5:0] opcode;
 logic [4:0] rs;
 logic [4:0] rt;
@@ -36,13 +33,37 @@ assign rd = instr[15:11];
 assign imm = instr[15:0]; 
 assign funct = instr[5:0];
 
+// regfile signals
+logic [31:0] rd1;
+logic [31:0] rd2;
+logic [4:0] wa3;
+logic [31:0] wd3;
 
-logic MemtoReg;     // √
-logic Branch;      
-logic [2:0] ALUOp;  // √
-logic ALUSrc;       // √
-logic RegDst;       // √
-logic RegWrite;     // √
+
+// alu signals
+logic [31:0] imm_extend;
+logic [31:0] SrcB;
+logic [31:0] aluRes;
+logic zero;
+
+// pc signals
+logic pcSrc;
+logic [31:0] pc;
+logic [31:0] next_pc;
+logic [31:0] pc_plus4;
+
+
+
+assign pcSrc = Branch & zero; // 1'b0 or 1'b1
+assign iaddr = pc; 
+assign pc_plus4 = pc + 4; // pc+4
+assign next_pc = pcSrc ? (pc_plus4 + (imm_extend << 2)) : pc_plus4;
+PC prgramCounter(
+    .sys_clk(sys_clk),
+    .sys_rst_n(sys_rst_n),
+    .next_pc(next_pc),
+    .pc(pc)
+);
 
 controlUnit controlUnit (
     .opcode(opcode), 
@@ -57,11 +78,9 @@ controlUnit controlUnit (
     .RegWrite(RegWrite)   
 );
 
-logic [31:0] rd1;
-logic [31:0] rd2;
-logic [4:0] wa3;
+
+assign din = rd2; 
 assign wa3 = RegDst ? rd : rt; 
-logic [31:0] wd3;
 assign wd3 = MemtoReg ? dout : aluRes;
 RegFile regFile (
     .sys_clk(sys_clk),
@@ -75,7 +94,7 @@ RegFile regFile (
     .rd1(rd1),
     .rd2(rd2)
 );
-assign din = rd2; 
+
 
 // imm sign extend
 signExtend signExtend (
@@ -84,16 +103,17 @@ signExtend signExtend (
 );
 
 // alu
-logic [31:0] SrcB;
 assign SrcB = ALUSrc ? imm_extend : rd2;
+assign daddr = aluRes;
 alu alu (
     .SrcA(rd1),
     .SrcB(SrcB),                // rd2 or imm_extend
     .aluop(ALUOp),
 
-    .alures(aluRes)
+    .alures(aluRes),
+    .zero(zero)
 );
-assign daddr = aluRes;
+
 
 
 endmodule

@@ -23,18 +23,6 @@ module controlUnit(
         RegWrite = 1'b0;
 
         case (opcode)
-            6'b000000: begin // R-type instructions
-                RegDst = 1'b1; // Write to rd
-                RegWrite = 1'b1; // Enable register write
-                case (funct)
-                    6'b100000: ALUOp = 3'b010; // ADD
-                    6'b100010: ALUOp = 3'b110; // SUB
-                    6'b100100: ALUOp = 3'b001; // AND
-                    6'b100101: ALUOp = 3'b001; // OR 
-                    default:   ALUOp = 3'b000; // Default case for unsupported funct 
-                endcase
-            end
-
             6'b100011: begin // LW 
                 MemtoReg = 1'b1; 
                 RegWrite = 1'b1; 
@@ -48,22 +36,43 @@ module controlUnit(
                 ALUOp = 3'b010;
             end
             
+        // I-type instructions
             6'b001111: begin // LUI 
                 ALUSrc = 1'b1; 
                 RegWrite = 1'b1; 
-                ALUOp = 3'b000; // ALU operation for LUI
+                ALUOp = 3'b000; 
             end
 
             6'b001101: begin // ORI 
                 ALUSrc = 1'b1; 
                 RegWrite = 1'b1; 
-                ALUOp = 3'b001; // ALU operation for ORI
+                ALUOp = 3'b001; 
             end
 
             6'b001001: begin // ADDIU 
                 ALUSrc = 1'b1; 
                 RegWrite = 1'b1; 
-                ALUOp = 3'b010; // ALU operation for ADDIU
+                ALUOp = 3'b010; 
+            end
+
+            6'b000100: begin // BEQ 
+                Branch = 1'b1; 
+                ALUOp = 3'b110; 
+            end
+
+        // R-type instructions
+            6'b000000: begin 
+                RegDst = 1'b1; // Write to rd
+                RegWrite = 1'b1; // Enable register write
+                case (funct)
+                    6'b100000: ALUOp = 3'b010; // ADD
+                    6'b100010: ALUOp = 3'b110; // SUB
+                    6'b100100: ALUOp = 3'b001; // AND
+                    6'b100101: ALUOp = 3'b001; // OR
+                    6'b101010: ALUOp = 3'b111; // SLT
+
+                    default:   ALUOp = 3'b000; // Default case for unsupported funct 
+                endcase
             end
 
             default: begin // Default case for unsupported opcodes

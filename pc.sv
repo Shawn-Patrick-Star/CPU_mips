@@ -13,6 +13,6 @@ module PC(
         else
             pc <= next_pc;
     end
-    assign next_pc = pc + 4;
+
     
 endmodule

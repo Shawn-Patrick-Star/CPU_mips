@@ -8,7 +8,8 @@ module controlUnit(
     output logic [2:0] ALUOp, 
     output logic ALUSrc,      // ALUSrcB来自于立即数32位扩展(1) or 寄存器(0)
     output logic RegDst,      // 寄存器写入地址来自于 rt(0) or rd(1)
-    output logic RegWrite     // 是否需要写 RegFiles
+    output logic RegWrite,    // 是否需要写 RegFiles
+    output logic Jump         // 是否需要跳转
     );
 
     // Control unit logic
@@ -60,12 +61,18 @@ module controlUnit(
                 ALUOp = 3'b110; 
             end
 
+            // j
+            6'b000010: begin // JUMP 
+                Jump = 1'b1; 
+            end
+
         // R-type instructions
             6'b000000: begin 
                 RegDst = 1'b1; // Write to rd
                 RegWrite = 1'b1; // Enable register write
                 case (funct)
                     6'b100000: ALUOp = 3'b010; // ADD
+                    6'b100001: ALUOp = 3'b010; // ADDU
                     6'b100010: ALUOp = 3'b110; // SUB
                     6'b100100: ALUOp = 3'b001; // AND
                     6'b100101: ALUOp = 3'b001; // OR

@@ -20,7 +20,7 @@ module alu (
             SUB: alures = SrcA - SrcB;
             ORI: alures = SrcA | SrcB;
             LUI: alures = SrcB << 16; // Shift left immediate value
-            SLT: alures = (SrcA < SrcB) ? 32'h00000001 : 32'h00000000; // Set less than
+            SLT: alures = ($signed(SrcA) < $signed(SrcB)) ? 32'h00000001 : 32'h00000000; // Set less than
             default: alures = 32'h00000000;
         endcase
 

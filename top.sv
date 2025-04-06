@@ -19,7 +19,7 @@ module top(
     testLed testLed(
         .sys_clk(sys_clk),
         .sys_rst_n(sys_rst_n),
-        .din(din),
+        .din(din_little),
         .daddr(daddr),
         .led_r(led_r),
         .led_g(led_g)

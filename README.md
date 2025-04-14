@@ -133,18 +133,81 @@ f2ff1116    bne $s0, $s1, sort_loop
 0010103c    lui s0,0x1000
 00001026    addiu s0,s0,0
 
-0000088e
-0400098e
-08000a8e
-0c000b8e
-10000c8e
-14000d8e
-18000e8e
-1c000f8e
-1b000008
+0000088e    lw $t0,  0($s0)
+0400098e    lw $t1,  4($s0)
+08000a8e    lw $t2,  8($s0)
+0c000b8e    lw $t3, 12($s0)
+10000c8e    lw $t4, 16($s0)
+14000d8e    lw $t5, 20($s0)
+18000e8e    lw $t6, 24($s0)
+1c000f8e    lw $t7, 28($s0)
+1b000008    j sort_end    
 ```
 </details>
 
 最终在 board 上测试成功，led_g 亮起，表示排序成功！
 
 ![board](./pic/image_7.png)
+
+修改tb文件，以便于测试重置后是否能够再次正常运行，修改部分如下：
+```verilog  
+   `define CLK_PERIOD 10
+   ...other code...
+   initial begin
+      // Initialize Inputs
+      sys_clk = 0;
+      sys_rst_n = 0;
+      #100
+      sys_rst_n = 1;     
+
+      #3000
+
+      sys_rst_n = 0;
+      #100
+      sys_rst_n = 1;
+      #3000 $stop;
+   end
+```
+
+此时发现的一个**问题**，重置后，led_g 不会亮起，发现是因为
+sort_board.S中有如下指令：
+```assembly
+   li $a1, 0x80040000	   // 0480053c                     
+   li $a2, 0x80000000	   // 0080063c
+   ...
+   sort_end:
+   sw $a0, 0($a1)   // 0000a4ac
+   j sort_end       // 30000008
+
+   ERROR:
+   sw $a0, 0($a2)   // 0000c4ac
+   j ERROR          // 32000008
+```
+看似将数据存储在了 地址 0x80040000(正确) 或 0x80000000(错误)，但是根据**coe文件的读取原理**，9位之前被舍弃，所以二者都是将数据存储在了 **地址0** 中，导致重置后第二次运行，在 地址0 读取了错误的数据（即$a0中的值=1）
+
+<details>
+<summary>coe文件的读取原理</summary>
+
+第一行的内容存放在地址0中，第二行的内容存放在地址1中，这也是为什么top.sv文件中使用iaddr[9:2]、daddr[9:2] (按照字节对齐)，而不是iaddr[7:0]、daddr[7:0]
+```verilog
+    inst_rom inst_rom (
+        .a(iaddr[9:2]),      // input wire [9 : 2] a
+        .spo(instr_little)  // output wire [31 : 0] spo
+    );
+    
+    data_ram data_ram (
+        .a(daddr[9:2]),      // input wire [9 : 2] a
+        .d(din_little),      // input wire [31 : 0] d
+        .clk(sys_clk),  // input wire clk
+        .we(MemWrite),    // input wire we
+        .spo(dout_little)  // output wire [31 : 0] spo
+    );
+```
+</details>
+
+这个没法弄，除非改$a1和$a2的值，需要加2条指令，将$a1和$a2值的低位改为 >20 比如
+```assembly 
+ori $a1, $a1, 0x40(0x44 0x48 ...)
+ori $a2, $a2, 0x44(0x44 0x48 ...)
+```
+为了避免污染地址0--15的数据

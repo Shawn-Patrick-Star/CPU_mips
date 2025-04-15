@@ -1,12 +1,12 @@
 module cpu(
-    input  logic sys_clk,
-    input  logic sys_rst_n,
+    input  logic        sys_clk,
+    input  logic        sys_rst_n,
     input  logic [31:0] instr,      // 指令 from inst_rom
     input  logic [31:0] dout,       // 数据 from data_ram
 
     output logic [31:0] iaddr,      // 指令地址 to inst_rom
     output logic [31:0] daddr,      // 数据地址 to data_ram
-    output logic MemWrite,
+    output logic        MemWrite,
     output logic [31:0] din         // 数据 to data_ram
 );
 
@@ -16,8 +16,8 @@ logic           MemtoReg;
 logic [2:0]     ALUOp; 
 logic           ALUSrc;      
 logic           RegDst;      
-logic           RegWrite;    
-logic           Jump;        
+logic           RegWrite;       
+logic [1:0]     npc_op; 
 
 // instruction signals
 logic [5:0]     opcode;
@@ -47,30 +47,35 @@ logic [31:0]    wd3;
 logic [31:0]    imm_extend;
 logic [31:0]    SrcB;
 logic [31:0]    aluRes;
-logic zero;
+logic isBranch;
 
 // pc signals
-logic           pcSrc;
 logic [31:0]    pc;
-logic [31:0]    next_pc;
-logic [31:0]    pc_plus4;
+logic [31:0]    npc;
 
 /* ----------------------------------------------- */
 
-assign pc_plus4 = pc + 4; // pc+4
-assign next_pc = Jump ? {pc_plus4[31:28], target, 2'b00} : 
-                 pcSrc ? (pc_plus4 + (imm_extend << 2)) : pc_plus4;
+Npc NPC (
+    .pc(pc),
+    .npc_op(npc_op),
+    .imm_extend(imm_extend),
+    .target(target),
+    .isBranch(isBranch),
+
+    .npc(npc)
+);
+
 PC prgramCounter(
     .sys_clk(sys_clk),
     .sys_rst_n(sys_rst_n),
-    .next_pc(next_pc),
+    .npc(npc),
+
     .pc(pc)
 );
 
 controlUnit controlUnit (
     .opcode(opcode), 
     .funct(funct),
-    .zero(zero),
 
     .MemtoReg(MemtoReg),    
     .MemWrite(MemWrite),       
@@ -78,8 +83,7 @@ controlUnit controlUnit (
     .ALUSrc(ALUSrc),     
     .RegDst(RegDst),     
     .RegWrite(RegWrite),
-    .Jump(Jump),
-    .pcSrc(pcSrc)
+    .npc_op(npc_op)
 );
 
 
@@ -114,7 +118,7 @@ alu alu (
     .aluop(ALUOp),
 
     .alures(aluRes),
-    .zero(zero)
+    .isBranch(isBranch)
 );
 
 // cpu output

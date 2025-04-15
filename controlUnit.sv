@@ -1,7 +1,6 @@
 module controlUnit(
     input logic [5:0] opcode,   // Opcode from instruction
     input logic [5:0] funct,    // Function code from instruction
-    input logic zero,           // Zero flag from ALU
 
     output logic MemtoReg,      // 回写的数据来自于 ALU计算结果(0) or 存储器读取结果(1)
     output logic MemWrite,      // 是否需要写 data memory
@@ -9,8 +8,7 @@ module controlUnit(
     output logic ALUSrc,        // ALUSrcB来自于立即数32位扩展(1) or 寄存器(0)
     output logic RegDst,        // 寄存器写入地址来自于 rt(0) or rd(1)
     output logic RegWrite,      // 是否需要写 RegFiles
-    output logic Jump,          // 是否需要跳转
-    output logic pcSrc          // pcSrc来自于分支跳转(1) or pc+4(0)
+    output logic [1:0] npc_op   // npc_op来自于非跳转指令(00) or 条件跳转指令(01) or jump指令(10)
     );
 
     // Control unit logic
@@ -22,8 +20,8 @@ module controlUnit(
         ALUSrc = 1'b0;
         RegDst = 1'b0;
         RegWrite = 1'b0;
-        Jump = 1'b0;
-        pcSrc = 1'b0;
+
+        npc_op = 2'b00; 
 
         case (opcode)
             6'b100011: begin // LW 
@@ -59,18 +57,17 @@ module controlUnit(
             end
 
             6'b000100: begin // BEQ 
-                pcSrc = zero;
-                ALUOp = 3'b110; 
-                
+                ALUOp = 3'b100;
+                npc_op = 2'b01; 
             end
 
             6'b000101: begin // BNE 
-                pcSrc = ~zero;
-                ALUOp = 3'b110; 
+                ALUOp = 3'b101;
+                npc_op = 2'b01;
             end
 
             6'b000010: begin // JUMP 
-                Jump = 1'b1; 
+                npc_op = 2'b10; 
             end
 
         // R-type instructions
@@ -96,8 +93,7 @@ module controlUnit(
                 ALUSrc = 1'b0;
                 RegDst = 1'b0;
                 RegWrite = 1'b0;
-                Jump = 1'b0;
-                pcSrc = 1'b0;
+                npc_op = 2'b00; 
             end
         endcase
 

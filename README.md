@@ -31,16 +31,35 @@
 | lw | 100011 | rs     | rt     | imm     |
 | sw | 101011 | rs     | rt     | imm     |
 
+## 框架图
+
+整个CPU的设计核心在于根据框架图，完成各个模块的设计和连接。
+
+总框架图：
+
+<img src="./pic/image_9.png" alt="总框架图" width=80%/>
+
+
+如下是第一版的框架图:
+
+<img src="./pic/image_8.png" alt="第一版框架图" width=80%/>
+
+NPC的实现参考如下：
+<img src="./pic/image_10.png" alt="NPC实现" width=80%/>
+
+
+
+
 ## 波形验证
 
 ### 1. lw & sw 指令
 注意看instr的内容，是小端所以和coe文件中的内容不一样
 
-![wave_instr](./pic/image_1.png)
+<img src="./pic/image_1.png" alt="wave_instr" width=80%/>
 
 注意看register的内容，最后写入reg[0]是因为op = 000000, RegWrite = 1 (正常不应该写入，继续完成其他指令会修改)
 
-![wave_reg](./pic/image_2.png)
+<img src="./pic/image_2.png" alt="wave_reg" width=80%/>
 
 ```verilog
 case (opcode)
@@ -60,21 +79,21 @@ case (opcode)
 ### 2. I-type 指令(lui, ori, addiu)
 注意看reg中的变化，和汇编代码中的变化一致
 
-![wave_lui](./pic/image_3.png)
+<img src="./pic/image_3.png" alt="wave_lui" width=80%/>
 
 ### 3. R-type 指令(slt, beq, addu(是I-type但是新实现的), j)
 
 注意看reg中的变化，来判断 slt 和 addu 是否正确
 注意看instr的变化，来判断 beq 和 j 是否正确
 
-![wave_slt](./pic/image_4.png)
+<img src="./pic/image_4.png" alt="wave_slt" width=80%/>
 
 
 ### 4. bne 指令
 
 注意看instr的变化，来判断 bne 是否正确
 
-![wave_bne](./pic/image_5.png)
+<img src="./pic/image_5.png" alt="wave_bne" width=80%/>
 
 
 ### sort.S (冒泡排序 综合测试)
@@ -84,7 +103,7 @@ case (opcode)
 
 注意看reg中的变化，来判断是否正确，可以看到寄存器```$t0 ~ $t7```的值按序排列了，成功！
 
-![wave_sort](./pic/image_6.png)
+<img src="./pic/image_6.png" alt="wave_sort" width=80%/>
 
 在阅读波形图的时候，下面的 表格、汇编&指令的对应 可以帮助你理解 指令 和 寄存器 的变化
 <details>
@@ -147,7 +166,7 @@ f2ff1116    bne $s0, $s1, sort_loop
 
 最终在 board 上测试成功，led_g 亮起，表示排序成功！
 
-![board](./pic/image_7.png)
+<img src="./pic/image_7.png" alt="board" width=80%/>
 
 修改tb文件，以便于测试重置后是否能够再次正常运行，修改部分如下：
 ```verilog  

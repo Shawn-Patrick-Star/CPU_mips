@@ -4,6 +4,8 @@
 3. 注意小端和大端存储的区别（本项目使用小端存储，所以 inst_rom 和 data_ram 中**读出**和**写入**的数据要先转换，即little endian存储，big endian取出）
 4. inst_rom, data_ram 使用的IP核是 distributed memory generator (depth = 256, width = 32)
 5. 仿真时间默认10us，需要再点击播放键，会继续仿真直到 ```$stop```
+6. 观察波形图会发现，当rst=0时，这时PC=0x00000000，因为inst_rom时没有使能端口的，所以会读出instruction，也就进行了译码执行等等环节，但是由于rst=0，不会写回regfile，但是当rst=1时，会直接写入，所以就是比正常的cpu快一个周期
+7. module的名字和实例化的名字不要一致，比如```cpu cpu(...);```，因为这样就没办法使用vscode跳转
 
 ## 辅助知识
 

@@ -1,4 +1,4 @@
-# CPU_mips
+# CPU_single_mips
 
 天津大学数字逻辑课程实验
 
